@@ -69,7 +69,7 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         token1 = _token1;
     }
 
-    // ¸üĞÂreserves,Ã¿¸ö¿éÊ×ÏÈµ÷ÓÃµÄº¯Êı£¬ÀÛ¼Æ¼Û¸ñ
+    // æ›´æ–°reserves,æ¯ä¸ªå—é¦–å…ˆè°ƒç”¨çš„å‡½æ•°ï¼Œç´¯è®¡ä»·æ ¼
     function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
         require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
@@ -110,11 +110,11 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     // this low-level function should be called from a contract which performs important safety checks
     function mint(address to) external lock returns (uint liquidity) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        uint balance0 = IERC20(token0).balanceOf(address(this));//Á½ÖÖ±Ò¶¼ËøÔÚÁË´ËºÏÔ¼µØÖ·£¬ÖÊÑº¿ÉÄÜĞèÒªÁ½¸öÍâ²¿ÕË»§À´±£´æ£¬Èçwusd¼°wbbµÄÕË»§
+        uint balance0 = IERC20(token0).balanceOf(address(this));//ä¸¤ç§å¸éƒ½é”åœ¨äº†æ­¤åˆçº¦åœ°å€ï¼Œè´¨æŠ¼å¯èƒ½éœ€è¦ä¸¤ä¸ªå¤–éƒ¨è´¦æˆ·æ¥ä¿å­˜ï¼Œå¦‚wusdåŠwbbçš„è´¦æˆ·
         uint balance1 = IERC20(token1).balanceOf(address(this));
-        uint amount0 = balance0.sub(_reserve0);//´ËºÏÔ¼ÉÏµÄtoken0µÄÊıÁ¿±ä»¯
-        uint amount1 = balance1.sub(_reserve1);//´ËºÏÔ¼ÉÏµÄtoken1µÄÊıÁ¿±ä»¯
-        //Á½¸ö±ÒÖÖÊıÁ¿¶¼Ôö¼Ó£¬liquidity providerÌá¹©Á÷¶¯ĞÔµÄÊ±ºòµ÷ÓÃ´Ëmint
+        uint amount0 = balance0.sub(_reserve0);//æ­¤åˆçº¦ä¸Šçš„token0çš„æ•°é‡å˜åŒ–
+        uint amount1 = balance1.sub(_reserve1);//æ­¤åˆçº¦ä¸Šçš„token1çš„æ•°é‡å˜åŒ–
+        //ä¸¤ä¸ªå¸ç§æ•°é‡éƒ½å¢åŠ ï¼Œliquidity provideræä¾›æµåŠ¨æ€§çš„æ—¶å€™è°ƒç”¨æ­¤mint
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
@@ -122,13 +122,13 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
            _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
-            // amount0Îªtoken0 ¿ÉÓÃÁ¿£¬amount0*´ËºÏÔ¼µÄliquidity totalsupply/reserve0
-            // reserve0Îª´ËºÏÔ¼Ô¤ÁôµÄtoken0Á¿
-            // reserve1Îª´ËºÏÔ¼Ô¤ÁôµÄtoken1Á¿
+            // amount0ä¸ºtoken0 å¯ç”¨é‡ï¼Œamount0*æ­¤åˆçº¦çš„liquidity totalsupply/reserve0
+            // reserve0ä¸ºæ­¤åˆçº¦é¢„ç•™çš„token0é‡
+            // reserve1ä¸ºæ­¤åˆçº¦é¢„ç•™çš„token1é‡
             liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }
         require(liquidity > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_MINTED');
-        _mint(to, liquidity);//liquidity mint¸ølp£¬lpÊê»Ø±ÒµÄÊ±ºòburnµô
+        _mint(to, liquidity);//liquidity mintç»™lpï¼Œlpèµå›å¸çš„æ—¶å€™burnæ‰
 
         _update(balance0, balance1, _reserve0, _reserve1);
         if (feeOn) kLast = uint(reserve0).mul(reserve1); // reserve0 and reserve1 are up-to-date
@@ -136,21 +136,21 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
     }
 
     // this low-level function should be called from a contract which performs important safety checks
-    // liquidity provider Ìá±ÒµÄÊ±ºòburnµôliquidity
+    // liquidity provider æå¸çš„æ—¶å€™burnæ‰liquidity
     function burn(address to) external lock returns (uint amount0, uint amount1) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         address _token0 = token0;                                // gas savings
         address _token1 = token1;                                // gas savings
-        uint balance0 = IERC20(_token0).balanceOf(address(this));//ÔÚ´ËºÏÔ¼µØÖ·ÉÏµÄtoken0 Óà¶î
-        uint balance1 = IERC20(_token1).balanceOf(address(this));//ÔÚ´ËºÏÔ¼µØÖ·ÉÏµÄtoken1 Óà¶î
-        //ËÆºõÓ¦¸ÃÌá±ÒÕßÊ×ÏÈ×ªliquidityµ½´ËºÏÔ¼µØÖ·£¬È»ºóburn´ËºÏÔ¼µØÖ·ÉÏµÄliquidity
+        uint balance0 = IERC20(_token0).balanceOf(address(this));//åœ¨æ­¤åˆçº¦åœ°å€ä¸Šçš„token0 ä½™é¢
+        uint balance1 = IERC20(_token1).balanceOf(address(this));//åœ¨æ­¤åˆçº¦åœ°å€ä¸Šçš„token1 ä½™é¢
+        //ä¼¼ä¹åº”è¯¥æå¸è€…é¦–å…ˆè½¬liquidityåˆ°æ­¤åˆçº¦åœ°å€ï¼Œç„¶åburnæ­¤åˆçº¦åœ°å€ä¸Šçš„liquidity
         uint liquidity = balanceOf[address(this)];
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
-        // °´ÕÕliquidityµÄ±ÈÀıÊê»ØÌá¹©µÄtoken0
+        // æŒ‰ç…§liquidityçš„æ¯”ä¾‹èµå›æä¾›çš„token0
         amount0 = liquidity.mul(balance0) / _totalSupply;
-        // °´ÕÕliquidityµÄ±ÈÀıÊê»ØÌá¹©µÄtoken1
+        // æŒ‰ç…§liquidityçš„æ¯”ä¾‹èµå›æä¾›çš„token1
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
 
         require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
@@ -167,10 +167,10 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
 
     // this low-level function should be called from a contract which performs important safety checks
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
-        //¼ì²é¶Ò»»³ötoken0»¹ÊÇtoken1£¬Á½Õß±ØĞë´æÔÚÒ»¸ö£¬Á½Õß¹²´æÒ²¿ÉÒÔ£¿
+        //æ£€æŸ¥å…‘æ¢å‡ºtoken0è¿˜æ˜¯token1ï¼Œä¸¤è€…å¿…é¡»å­˜åœ¨ä¸€ä¸ªï¼Œä¸¤è€…å…±å­˜ä¹Ÿå¯ä»¥ï¼Ÿ
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        //¶Ò»»Á¿ÊÇÒªĞ¡ÓÚ´ËÊĞ³¡µÄ±ÒÁ¿
+        //å…‘æ¢é‡æ˜¯è¦å°äºæ­¤å¸‚åœºçš„å¸é‡
         require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
 
         uint balance0;
@@ -181,26 +181,26 @@ contract UniswapV2Pair is IUniswapV2Pair, UniswapV2ERC20 {
         require(to != _token0 && to != _token1, 'UniswapV2: INVALID_TO');
         if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
         if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-        // Õâ¸öµØ·½ÊÇcallee »Øµ÷£¬¾ßÌåÊµÏÖ´ı²é
+        // è¿™ä¸ªåœ°æ–¹æ˜¯callee å›è°ƒï¼Œå…·ä½“å®ç°å¾…æŸ¥
         if (data.length > 0) IUniswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
-            //balance0£¬balance1ÎªtransferÖ®ºóµÄÓà¶î
+            //balance0ï¼Œbalance1ä¸ºtransferä¹‹åçš„ä½™é¢
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
         }
-        //Èçamount0InÎª1£¬Ôòamount0OutÎª0£¬balance0 > _reserve0£¬balance0-_reserve0=1
+        //å¦‚amount0Inä¸º1ï¼Œåˆ™amount0Outä¸º0ï¼Œbalance0 > _reserve0ï¼Œbalance0-_reserve0=1
         uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
         uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
-        //ÒªÇó±ØĞëÓĞÒ»¸ötokenÊÇ×ªÈëµÄ
+        //è¦æ±‚å¿…é¡»æœ‰ä¸€ä¸ªtokenæ˜¯è½¬å…¥çš„
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
         { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-            //Èç³õÊ¼Öµ1200*400=k=480000£¬¼Û¸ñ1200/400=3
-            //×ªÈë3¸ötoken0£¬1203*399=480008.97£¬¼Û¸ñ1203.03/399=3.01
+            //å¦‚åˆå§‹å€¼1200*400=k=480000ï¼Œä»·æ ¼1200/400=3
+            //è½¬å…¥3ä¸ªtoken0ï¼Œ1203*399=480008.97ï¼Œä»·æ ¼1203.03/399=3.01
             //1203.03*1000-3*3
-            //balance0AdjustedÎª²»°üº¬ÊÖĞø·Ñ×ªÈëÓà¶î
-            //Èç 1200+3=1203£¬²»°üº¬ÊÖĞø·Ñ
+            //balance0Adjustedä¸ºä¸åŒ…å«æ‰‹ç»­è´¹è½¬å…¥ä½™é¢
+            //å¦‚ 1200+3=1203ï¼Œä¸åŒ…å«æ‰‹ç»­è´¹
         uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
         uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
-            //kÖµ»áÂÔÓĞÔö³¤
+            //kå€¼ä¼šç•¥æœ‰å¢é•¿
         require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
         }
 
