@@ -27,7 +27,11 @@ contract UniswapV2Factory is IUniswapV2Factory {
         require(getPair[token0][token1] == address(0), 'UniswapV2: PAIR_EXISTS'); // single check is sufficient
         bytes memory bytecode = type(UniswapV2Pair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
-        assembly {
+//        https://solidity.readthedocs.io/en/v0.4.24/assembly.html
+//        create(v, p, s)	 	F	create new contract with code mem[p..(p+s)) and send v wei and return the new address
+//    create2(v, n, p, s)	 	C	create new contract with code mem[p..(p+s)) at address keccak256(<address> . n . keccak256(mem[p..(p+s))) and send v wei and return the new address
+
+    assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         IUniswapV2Pair(pair).initialize(token0, token1);
